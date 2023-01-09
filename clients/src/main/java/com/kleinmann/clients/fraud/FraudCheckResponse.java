@@ -1,4 +1,4 @@
-package com.kleinmann.fraud;
+package com.kleinmann.clients.fraud;
 
 public record FraudCheckResponse(Boolean isFraudster) {
 }
