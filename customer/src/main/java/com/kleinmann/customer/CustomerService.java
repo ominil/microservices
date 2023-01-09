@@ -1,12 +1,17 @@
 package com.kleinmann.customer;
 
+import com.kleinmann.clients.fraud.FraudCheckResponse;
+import com.kleinmann.clients.fraud.FraudClient;
+import com.kleinmann.clients.notification.NotificationClient;
+import com.kleinmann.clients.notification.NotificationRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Objects;
 
 @Service
-public record CustomerService(CustomerRepository customerRepository, RestTemplate restTemplate) {
+public record CustomerService(CustomerRepository customerRepository,
+                              FraudClient fraudClient,
+                              NotificationClient notificationClient) {
 
     public void registerCustomer(CustomerRegistrationRequest request) {
         Customer customer = Customer.builder()
@@ -20,18 +25,19 @@ public record CustomerService(CustomerRepository customerRepository, RestTemplat
 
         customerRepository.saveAndFlush(customer);
 
-        FraudCheckResponse fraudCheckResponse = restTemplate.getForObject(
-                "http://FRAUD/api/v1/fraud-check/{customerId}",
-                FraudCheckResponse.class,
-                customer.getId()
-        );
+        FraudCheckResponse fraudCheckResponse = fraudClient.isFraudster(customer.getId());
 
         if (Objects.requireNonNull(fraudCheckResponse).isFraudster()) {
             throw new IllegalStateException("fraudster detected");
         }
 
 
-        // todo: send notification
+        // todo: make it async. i.e. add to queue
+        notificationClient.sendNotification(NotificationRequest.builder()
+                        .toCustomerID(customer.getId())
+                        .toCustomerEmail(customer.getEmail())
+                        .message("Yeah you're not a fraudster!")
+                        .build());
 
     }
 }
