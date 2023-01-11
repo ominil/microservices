@@ -1,5 +1,6 @@
 package com.kleinmann.customer;
 
+import com.kleinmann.amqp.RabbitMQMessageProducer;
 import com.kleinmann.clients.fraud.FraudCheckResponse;
 import com.kleinmann.clients.fraud.FraudClient;
 import com.kleinmann.clients.notification.NotificationClient;
@@ -11,7 +12,7 @@ import java.util.Objects;
 @Service
 public record CustomerService(CustomerRepository customerRepository,
                               FraudClient fraudClient,
-                              NotificationClient notificationClient) {
+                              RabbitMQMessageProducer rabbitMQMessageProducer) {
 
     public void registerCustomer(CustomerRegistrationRequest request) {
         Customer customer = Customer.builder()
@@ -31,13 +32,18 @@ public record CustomerService(CustomerRepository customerRepository,
             throw new IllegalStateException("fraudster detected");
         }
 
+        NotificationRequest notificationRequest = NotificationRequest.builder()
+                .toCustomerID(customer.getId())
+                .toCustomerEmail(customer.getEmail())
+                .message(String.format("Hi %s, your registration has been completed!", customer.getFirstName()))
+                .build();
 
-        // todo: make it async. i.e. add to queue
-        notificationClient.sendNotification(NotificationRequest.builder()
-                        .toCustomerID(customer.getId())
-                        .toCustomerEmail(customer.getEmail())
-                        .message("Yeah you're not a fraudster!")
-                        .build());
+        rabbitMQMessageProducer.publish(
+                notificationRequest,
+                "internal.exchange",
+                "internal.notification.routing-key"
+        );
+
 
     }
 }

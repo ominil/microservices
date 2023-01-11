@@ -1,4 +1,4 @@
-package com.kleinmann;
+package com.kleinmann.notification;
 
 import lombok.*;
 
