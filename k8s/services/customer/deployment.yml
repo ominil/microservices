@@ -21,6 +21,12 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: kube
+            - name: SPRING_DATASOURCE_USERNAME
+              value: linpostgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: QWvWk6wTId+maxRU
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://lin-14723-4586-pgsql-primary.servers.linodedb.net:5432/customer
       restartPolicy: Always
   selector:
     matchLabels:
