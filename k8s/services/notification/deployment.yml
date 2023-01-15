@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification
+  labels:
+    app: notification
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: notification
+      labels:
+        app: notification
+    spec:
+      containers:
+        - name: notification
+          image: kleinmannn/notification:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+            - name: SPRING_DATASOURCE_USERNAME
+              value: linpostgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: QWvWk6wTId+maxRU
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://lin-14723-4586-pgsql-primary.servers.linodedb.net:5432/notification
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: notification
